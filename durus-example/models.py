@@ -162,7 +162,7 @@ class Envio(Persistent):
         self.estado = estado
         self.detalles = PersistentList()
 
-  
+
     def agregar_producto(self, producto, cantidad):
         if cantidad <= 0:
             raise ValueError("La cantidad debe ser mayor que cero.")

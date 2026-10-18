@@ -1,4 +1,3 @@
-
 import os
 
 from durus.file_storage import FileStorage
@@ -12,7 +11,6 @@ from models import (
     Inventario,
     Envio,
 )
-
 
 class RepositorioCerveceria:
     """Administra los objetos persistentes de la cervecería."""

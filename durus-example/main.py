@@ -1,6 +1,4 @@
-
 from repository import RepositorioCerveceria
-
 
 def main():
     repositorio = RepositorioCerveceria()
@@ -231,11 +229,8 @@ def main():
 
         repositorio.guardar()
 
-
-
     finally:
         repositorio.cerrar()
-
 
 if __name__ == "__main__":
     main()
