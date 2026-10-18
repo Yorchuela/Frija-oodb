@@ -1,6 +1,6 @@
-
 from durus.persistent import Persistent
 from durus.persistent_list import PersistentList
+from durus.persistent_dict import PersistentDict
 
 
 class Producto(Persistent):
@@ -49,6 +49,48 @@ class Producto(Persistent):
         if valor <= 0:
             raise ValueError("El precio debe ser mayor que cero.")
         self._precio = valor
+
+        
+    @property
+    def marca(self):
+        return self._marca
+
+    @marca.setter
+    def marca(self, valor):
+        if not valor.strip():
+            raise ValueError("La marca no puede estar vacía.")
+        self._marca = valor
+
+    @property
+    def categoria(self):
+        return self._categoria
+
+    @categoria.setter
+    def categoria(self, valor):
+        if not valor.strip():
+            raise ValueError("La categoría no puede estar vacía.")
+        self._categoria = valor
+
+    @property
+    def contenido_ml(self):
+        return self._contenido_ml
+
+    @contenido_ml.setter
+    def contenido_ml(self, valor):
+        if valor <= 0:
+            raise ValueError("El contenido debe ser mayor que cero.")
+        self._contenido_ml = valor
+
+    @property
+    def alcohol(self):
+        return self._alcohol
+
+    @alcohol.setter
+    def alcohol(self, valor):
+        if not 0 <= valor <= 100:
+            raise ValueError("El alcohol debe estar entre 0 y 100.")
+        self._alcohol = valor
+
 
     def descripcion(self):
         return (
@@ -120,14 +162,18 @@ class Envio(Persistent):
         self.estado = estado
         self.detalles = PersistentList()
 
+  
     def agregar_producto(self, producto, cantidad):
         if cantidad <= 0:
             raise ValueError("La cantidad debe ser mayor que cero.")
 
-        self.detalles.append({
+        detalle = PersistentDict({
             "producto": producto,
             "cantidad": cantidad,
         })
+
+        self.detalles.append(detalle)
+
 
     def cambiar_estado(self, nuevo_estado):
         estados_validos = {

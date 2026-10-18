@@ -158,12 +158,19 @@ class RepositorioCerveceria:
         envio.cambiar_estado(estado)
         return True
 
+ 
     def eliminar_envio(self, envio_id):
-        if envio_id not in self.root["envios"]:
+        envio = self.root["envios"].get(envio_id)
+
+        if envio is None:
             return False
+
+        while len(envio.detalles) > 0:
+            del envio.detalles[-1]
 
         del self.root["envios"][envio_id]
         return True
+
 
     # ---------------- CONSULTAS ----------------
 
@@ -171,7 +178,7 @@ class RepositorioCerveceria:
         return [
             producto
             for producto in self.root["productos"].values()
-            if producto._categoria.lower() == categoria.lower()
+            if producto.categoria.lower() == categoria.lower()
         ]
 
     def inventario_bajo(self):
