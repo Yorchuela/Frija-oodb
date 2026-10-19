@@ -1,86 +1,200 @@
-﻿# Sistema de Base de Datos Orientada a Objetos para una Cervecería
+﻿# Yorch-Asociados
 
-## 1. Descripción
+## Sistema de gestión de una distribuidora de cerveza con base de datos orientada a objetos
 
-Este proyecto implementa un ejemplo de base de datos orientada a objetos utilizando Python y Durus. Está basado en el sistema de una empresa dedicada a la distribución y exportación de cerveza.
+## Descripción del proyecto
 
-El objetivo es representar productos, inventarios y envíos mediante objetos persistentes, permitiendo almacenar información, establecer referencias entre objetos y realizar operaciones de consulta y modificación.
+Este proyecto consiste en el desarrollo de un sistema para gestionar información de una distribuidora de cerveza llamada **Frija**, utilizando bases de datos orientadas a objetos.
 
-## 2. Tecnologías utilizadas
+El proyecto permite administrar productos, inventarios y envíos mediante clases de Python y el sistema de persistencia de objetos Durus. También implementa relaciones entre objetos, herencia, polimorfismo y manejo de transacciones.
 
-- Python 3
-- Durus 4.3
-- pywin32
-- Git y GitHub
+## Objetivo
 
-## 3. Estructura del proyecto
+Implementar y probar las operaciones principales de un sistema de gestión de una distribuidora de cerveza utilizando Python y una base de datos orientada a objetos.
+
+## Tecnologías utilizadas
+
+- **Python:** lenguaje de programación.
+- **Durus:** almacenamiento y persistencia de objetos Python.
+- **PowerShell:** ejecución de comandos y administración del entorno de desarrollo.
+- **Git y GitHub:** control de versiones y respaldo del código fuente.
+
+## Estructura del proyecto
 
 ```text
 Yorch-Asociados/
+├── durus-example/
+│   ├── data/
+│   ├── main.py
+│   ├── models.py
+│   ├── repository.py
+│   └── requirements.txt
 ├── .gitignore
-├── README.md
-├── diagrama_clases.md
-└── durus-example/
-    ├── main.py
-    ├── models.py
-    ├── repository.py
-    └── requirements.txt
+└── README.md
 ```
 
-La carpeta `venv` corresponde al entorno virtual local y no debe subirse al repositorio. La carpeta `data` almacena los archivos de persistencia generados durante la ejecución.
+**Descripción de los archivos principales:**
 
-## 4. Modelos implementados
+- `main.py`: ejecuta las operaciones del sistema y las pruebas.
+- `models.py`: contiene las clases y validaciones de los objetos.
+- `repository.py`: administra la persistencia, las consultas y las operaciones sobre los objetos.
+- `requirements.txt`: contiene las dependencias necesarias.
+- `data/`: almacena los archivos de datos generados localmente.
 
-- **Producto:** representa una cerveza e incluye atributos, validaciones y métodos para consultar su descripción.
-- **CervezaNacional:** especialización de `Producto` mediante herencia.
-- **CervezaImportada:** especialización de `Producto` mediante herencia y polimorfismo.
-- **Inventario:** mantiene una referencia al producto y administra las existencias de una sucursal.
-- **Envio:** representa un envío y contiene una colección persistente de productos y cantidades.
+## Modelos del sistema
 
-## 5. Instalación
+### Producto
 
-Se requiere tener Python instalado.
+Representa una cerveza y almacena información como nombre, marca, categoría, presentación, contenido en mililitros, porcentaje de alcohol y precio.
 
-Desde la terminal, ubicada en la carpeta raíz del proyecto, ejecutar:
+Se utilizan las clases `CervezaNacional` y `CervezaImportada`, derivadas de `Producto`, para demostrar herencia y polimorfismo.
+
+### Inventario
+
+Permite registrar las existencias de un producto por sucursal y establecer un nivel mínimo de stock para identificar cuándo es necesario reabastecer.
+
+### Envío
+
+Representa un envío a un cliente e incluye la sucursal de origen, la dirección de destino, el estado del envío y los productos asociados.
+
+## Funcionalidades implementadas
+
+- Crear, consultar, actualizar y eliminar productos.
+- Registrar y eliminar inventarios.
+- Relacionar productos con inventarios.
+- Registrar envíos y asociar productos con sus cantidades.
+- Consultar productos por categoría.
+- Identificar inventarios con existencias bajas.
+- Consultar envíos pendientes.
+- Utilizar herencia y polimorfismo en los tipos de cerveza.
+- Confirmar cambios mediante `COMMIT`.
+- Revertir cambios mediante `ABORT`.
+- Validar los datos antes de almacenarlos.
+- Cerrar el repositorio de forma segura e impedir operaciones posteriores al cierre.
+
+## Validaciones implementadas
+
+El sistema comprueba que los datos sean válidos antes de crear o modificar objetos. Entre las validaciones probadas se encuentran:
+
+- Rechazo de precios negativos.
+- Rechazo de porcentajes de alcohol fuera del rango permitido.
+- Rechazo de contenido infinito.
+- Rechazo de existencias negativas.
+- Rechazo de referencias a productos inexistentes.
+- Rechazo de categorías vacías.
+
+## Requisitos previos
+
+Para ejecutar el proyecto se necesita:
+
+- Python instalado.
+- Git, si se desea clonar el repositorio.
+- Un entorno virtual de Python.
+- Las dependencias indicadas en `durus-example/requirements.txt`.
+
+## Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/Yorchuela/Frija-oodb.git
+cd Frija-oodb
+```
+
+### 2. Crear el entorno virtual
+
+```bash
+python -m venv venv
+```
+
+### 3. Activar el entorno virtual
+
+En Windows PowerShell:
 
 ```powershell
-python -m venv venv
 .\venv\Scripts\Activate.ps1
-python -m pip install -r .\durus-example\requirements.txt
 ```
 
-Si PowerShell bloquea la activación del entorno virtual, ejecutar lo siguiente en esa misma terminal:
+Si PowerShell bloquea la ejecución del script, se puede habilitar temporalmente para la sesión actual:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
-.\venv\Scripts\Activate.ps1
 ```
 
-## 6. Ejecución
+Después, activar nuevamente el entorno virtual.
 
-Desde la raíz del proyecto, ejecutar:
+### 4. Instalar las dependencias
+
+Desde la raíz del proyecto:
 
 ```powershell
-cd .\durus-example
+pip install -r durus-example/requirements.txt
+```
+
+## Ejecución del sistema
+
+Desde la raíz del repositorio, ejecutar:
+
+```powershell
+cd durus-example
 python main.py
 ```
 
-El programa ejecuta pruebas de operaciones CRUD, relaciones entre objetos, herencia, polimorfismo, consultas y transacciones.
+El programa realiza operaciones de prueba sobre productos, inventarios y envíos, además de ejecutar las pruebas de validación y cierre del repositorio.
 
-## 7. Persistencia y transacciones
+## Ejecución de las pruebas
 
-Durus almacena los objetos en un archivo propio. El repositorio administra las colecciones persistentes de productos, inventarios y envíos mediante `connection.get_root()`.
+Desde la carpeta `durus-example`, ejecutar primero:
 
-El método `commit()` confirma los cambios realizados, mientras que `abort()` revierte los cambios pendientes de la transacción actual.
+```powershell
+python -m py_compile models.py repository.py main.py
+```
 
-## 8. Relación con el modelo relacional
+Este comando comprueba que los archivos no contengan errores de sintaxis.
 
-El proyecto toma como referencia el sistema de distribución de cerveza que utiliza una base de datos relacional. Las clases de Python representan conceptos del negocio y utilizan referencias entre objetos en lugar de depender exclusivamente de claves foráneas y operaciones `JOIN`.
+Después, ejecutar:
 
-## 9. Diagrama de clases
+```powershell
+python main.py
+```
 
-El archivo `diagrama_clases.md` contiene el diagrama UML del modelo orientado a objetos, incluyendo las clases principales, sus relaciones y la herencia.
+El programa muestra los resultados de las operaciones y de las pruebas implementadas.
 
-## 10. Autoría y propósito académico
+### Pruebas realizadas
 
-Proyecto académico para la asignatura Tópicos de Bases de Datos. Su propósito es estudiar las bases de datos orientadas a objetos, la persistencia, la herencia, el polimorfismo, las transacciones y las relaciones entre objetos.
+| Prueba | Resultado esperado |
+|---|---|
+| CRUD de productos | Operaciones ejecutadas correctamente |
+| Relaciones entre objetos | Referencias verificadas |
+| Herencia y polimorfismo | Descripciones especializadas verificadas |
+| Consultas | Productos, inventarios y envíos encontrados |
+| COMMIT | Cambios confirmados y conservados |
+| ABORT | Cambios temporales revertidos |
+| Validaciones | 6 de 6 pruebas aprobadas |
+| Cierre del repositorio | Operaciones posteriores al cierre rechazadas |
+
+**Resultado obtenido:** todas las pruebas finalizaron correctamente en la última ejecución realizada.
+
+## Persistencia de los datos
+
+Durus permite conservar los objetos en archivos de almacenamiento local. Los archivos de datos se generan durante la ejecución y se mantienen dentro de la carpeta `data/`.
+
+Los archivos de datos locales no forman parte del código fuente que debe compartirse en GitHub. Por ello, la carpeta se excluye mediante `.gitignore`.
+
+## Control de versiones
+
+El proyecto utiliza Git para registrar los cambios realizados durante el desarrollo y GitHub para alojar el repositorio remoto.
+
+Los cambios se pueden registrar y publicar con los siguientes comandos, ejecutados desde la raíz del repositorio:
+
+```bash
+git add .
+git commit -m "Descripción de los cambios"
+git push origin main
+```
+
+## Conclusión
+
+El proyecto permite aplicar conceptos de programación orientada a objetos y persistencia de datos en Python. Las pruebas realizadas verifican las operaciones principales, las relaciones entre objetos, las transacciones, las validaciones y el cierre seguro del repositorio.
+
+Este desarrollo constituye una base funcional para continuar ampliando el sistema de gestión de una distribuidora de cerveza.
