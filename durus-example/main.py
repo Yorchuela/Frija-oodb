@@ -1,16 +1,33 @@
 
+import os
+import tempfile
+
 from repository import RepositorioCerveceria
 
 
 def main():
-    repositorio = RepositorioCerveceria(
-        ruta="data/cerveceria_pruebas.durus"
+    os.makedirs("data", exist_ok=True)
+
+    # Crear un archivo temporal exclusivo para las pruebas.
+    archivo_temporal = tempfile.NamedTemporaryFile(
+        prefix="cerveceria_pruebas_",
+        suffix=".durus",
+        dir="data",
+        delete=False,
     )
 
+    ruta_temporal = archivo_temporal.name
+    archivo_temporal.close()
+    os.remove(ruta_temporal)
+
+    repositorio = None
+
     try:
+        repositorio = RepositorioCerveceria(ruta=ruta_temporal)
+
         print("=== PRUEBA CRUD Y TRANSACCIONES ===")
 
-        # 1. CREATE: crear un producto
+        # 1. CREATE: crear un producto.
         producto = repositorio.crear_producto(
             nombre="Cerveza de prueba CRUD",
             marca="Frija",
@@ -24,7 +41,7 @@ def main():
         repositorio.guardar()
         print(f"CREATE: producto {producto.producto_id} creado.")
 
-        # 2. READ: consultar el producto
+        # 2. READ: consultar el producto.
         producto_leido = repositorio.obtener_producto(
             producto.producto_id
         )
@@ -34,8 +51,9 @@ def main():
         else:
             print("READ: no se encontró el producto.")
 
-        # 3. UPDATE: modificar el precio
+        # 3. UPDATE: modificar el precio.
         precio_anterior = producto.precio
+
         repositorio.actualizar_precio(
             producto.producto_id,
             45.00,
@@ -53,7 +71,7 @@ def main():
 
         repositorio.guardar()
 
-        # 4. Crear inventario y comprobar la relación con el producto
+        # 4. Crear inventario y comprobar la relación.
         inventario = repositorio.crear_inventario(
             sucursal="Tijuana",
             producto_id=producto.producto_id,
@@ -69,10 +87,11 @@ def main():
             f"{inventario.producto.producto_id}."
         )
 
-        # 5. DELETE: eliminar el inventario y después el producto
+        # 5. DELETE: eliminar el inventario y después el producto.
         resultado_inventario = repositorio.eliminar_inventario(
             inventario.inventario_id
         )
+
         repositorio.guardar()
 
         print(
@@ -83,6 +102,7 @@ def main():
         resultado_producto = repositorio.eliminar_producto(
             producto.producto_id
         )
+
         repositorio.guardar()
 
         print(
@@ -91,6 +111,7 @@ def main():
         )
 
         # 6. COMMIT: guardar un producto de forma permanente
+        # dentro del almacenamiento temporal.
         producto_commit = repositorio.crear_producto(
             nombre="Cerveza Commit",
             marca="Frija",
@@ -106,7 +127,7 @@ def main():
 
         print(f"COMMIT: producto {id_commit} guardado.")
 
-        # 7. ABORT: comprobar que se revierten los cambios pendientes
+        # 7. ABORT: comprobar que se revierten los cambios pendientes.
         producto_temporal = repositorio.crear_producto(
             nombre="Cerveza Temporal",
             marca="Frija",
@@ -130,7 +151,7 @@ def main():
         else:
             print("ABORT: error, el producto temporal sigue existiendo.")
 
-        # 8. HERENCIA Y POLIMORFISMO
+        # 8. HERENCIA Y POLIMORFISMO.
         print("\n=== HERENCIA Y POLIMORFISMO ===")
 
         cerveza_nacional = repositorio.crear_producto(
@@ -160,7 +181,7 @@ def main():
         print(cerveza_nacional.descripcion())
         print(cerveza_importada.descripcion())
 
-        # 9. CONSULTAS Y RELACIONES ENTRE OBJETOS
+        # 9. CONSULTAS Y RELACIONES ENTRE OBJETOS.
         print("\n=== CONSULTAS DE OBJETOS ===")
 
         producto_consulta = repositorio.crear_producto(
@@ -225,7 +246,7 @@ def main():
                 detalle["producto"].descripcion(),
             )
 
-        # 10. ELIMINACIÓN EN CASCADA DE LOS DETALLES DEL ENVÍO
+        # 10. ELIMINACIÓN EN CASCADA DE LOS DETALLES DEL ENVÍO.
         print("\n=== ELIMINACIÓN EN CASCADA ===")
 
         id_envio_prueba = envio_consulta.envio_id
@@ -243,7 +264,13 @@ def main():
         repositorio.guardar()
 
     finally:
-        repositorio.cerrar()
+        try:
+            if repositorio is not None:
+                repositorio.cerrar()
+        finally:
+            # Eliminar solamente el archivo temporal de esta ejecución.
+            if os.path.exists(ruta_temporal):
+                os.remove(ruta_temporal)
 
 
 if __name__ == "__main__":
