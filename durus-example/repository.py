@@ -1,3 +1,4 @@
+
 import os
 
 from durus.file_storage import FileStorage
@@ -5,22 +6,26 @@ from durus.connection import Connection
 from durus.persistent_dict import PersistentDict
 
 from models import (
-    Producto,
     CervezaNacional,
     CervezaImportada,
     Inventario,
     Envio,
 )
 
+
 class RepositorioCerveceria:
     """Administra los objetos persistentes de la cervecería."""
 
     def __init__(self, ruta="data/cerveceria.durus"):
-        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        directorio = os.path.dirname(ruta)
+
+        if directorio:
+            os.makedirs(directorio, exist_ok=True)
 
         self.storage = FileStorage(ruta)
         self.connection = Connection(self.storage)
         self.root = self.connection.get_root()
+        self.cerrado = False
 
         # Colecciones persistentes principales.
         for nombre in ("productos", "inventarios", "envios"):
@@ -45,16 +50,29 @@ class RepositorioCerveceria:
     # ---------------- PRODUCTOS ----------------
 
     def crear_producto(
-        self, nombre, marca, categoria, presentacion,
-        contenido_ml, alcohol, precio, importado=False
+        self,
+        nombre,
+        marca,
+        categoria,
+        presentacion,
+        contenido_ml,
+        alcohol,
+        precio,
+        importado=False,
     ):
         producto_id = self._nuevo_id("producto")
 
         clase = CervezaImportada if importado else CervezaNacional
 
         producto = clase(
-            producto_id, nombre, marca, categoria,
-            presentacion, contenido_ml, alcohol, precio
+            producto_id,
+            nombre,
+            marca,
+            categoria,
+            presentacion,
+            contenido_ml,
+            alcohol,
+            precio,
         )
 
         self.root["productos"][producto_id] = producto
@@ -76,15 +94,26 @@ class RepositorioCerveceria:
         return True
 
     def eliminar_producto(self, producto_id):
-        # Evita eliminar productos que todavía tienen inventario.
+        producto = self.obtener_producto(producto_id)
+
+        if producto is None:
+            return False
+
+        # Evita eliminar productos que aún tienen inventario.
         for inventario in self.root["inventarios"].values():
             if inventario.producto.producto_id == producto_id:
                 raise ValueError(
                     "No se puede eliminar: el producto tiene inventario."
                 )
 
-        if producto_id not in self.root["productos"]:
-            return False
+        # Evita dejar referencias a productos inexistentes en los envíos.
+        for envio in self.root["envios"].values():
+            for detalle in envio.detalles:
+                if detalle["producto"].producto_id == producto_id:
+                    raise ValueError(
+                        "No se puede eliminar: el producto está "
+                        "referenciado en un envío."
+                    )
 
         del self.root["productos"][producto_id]
         return True
@@ -92,7 +121,11 @@ class RepositorioCerveceria:
     # ---------------- INVENTARIO ----------------
 
     def crear_inventario(
-        self, sucursal, producto_id, stock, stock_minimo
+        self,
+        sucursal,
+        producto_id,
+        stock,
+        stock_minimo,
     ):
         producto = self.obtener_producto(producto_id)
 
@@ -102,7 +135,11 @@ class RepositorioCerveceria:
         inventario_id = self._nuevo_id("inventario")
 
         inventario = Inventario(
-            inventario_id, sucursal, producto, stock, stock_minimo
+            inventario_id,
+            sucursal,
+            producto,
+            stock,
+            stock_minimo,
         )
 
         self.root["inventarios"][inventario_id] = inventario
@@ -124,14 +161,20 @@ class RepositorioCerveceria:
         envio_id = self._nuevo_id("envio")
 
         envio = Envio(
-            envio_id, cliente, sucursal, direccion
+            envio_id,
+            cliente,
+            sucursal,
+            direccion,
         )
 
         self.root["envios"][envio_id] = envio
         return envio
 
     def agregar_producto_envio(
-        self, envio_id, producto_id, cantidad
+        self,
+        envio_id,
+        producto_id,
+        cantidad,
     ):
         envio = self.root["envios"].get(envio_id)
         producto = self.obtener_producto(producto_id)
@@ -156,27 +199,28 @@ class RepositorioCerveceria:
         envio.cambiar_estado(estado)
         return True
 
- 
     def eliminar_envio(self, envio_id):
         envio = self.root["envios"].get(envio_id)
 
         if envio is None:
             return False
 
+        # Elimina los detalles antes de eliminar el envío.
         while len(envio.detalles) > 0:
             del envio.detalles[-1]
 
         del self.root["envios"][envio_id]
         return True
 
-
     # ---------------- CONSULTAS ----------------
 
     def productos_por_categoria(self, categoria):
+        categoria_buscada = categoria.strip().casefold()
+
         return [
             producto
             for producto in self.root["productos"].values()
-            if producto.categoria.lower() == categoria.lower()
+            if producto.categoria.casefold() == categoria_buscada
         ]
 
     def inventario_bajo(self):
@@ -196,11 +240,27 @@ class RepositorioCerveceria:
     # ---------------- TRANSACCIONES ----------------
 
     def guardar(self):
+        """Confirma los cambios pendientes."""
+        if self.cerrado:
+            raise RuntimeError("El repositorio ya está cerrado.")
+
         self.connection.commit()
 
     def deshacer_cambios(self):
+        """Revierte los cambios pendientes de la transacción actual."""
+        if self.cerrado:
+            raise RuntimeError("El repositorio ya está cerrado.")
+
         self.connection.abort()
+        self.root = self.connection.get_root()
 
     def cerrar(self):
-        self.connection.commit()
-        self.storage.close()
+        """Confirma los cambios pendientes y cierra el almacenamiento."""
+        if self.cerrado:
+            return
+
+        try:
+            self.connection.commit()
+        finally:
+            self.storage.close()
+            self.cerrado = True

@@ -1,7 +1,11 @@
+
 from repository import RepositorioCerveceria
 
+
 def main():
-    repositorio = RepositorioCerveceria()
+    repositorio = RepositorioCerveceria(
+        ruta="data/cerveceria_pruebas.durus"
+    )
 
     try:
         print("=== PRUEBA CRUD Y TRANSACCIONES ===")
@@ -10,130 +14,129 @@ def main():
         producto = repositorio.crear_producto(
             nombre="Cerveza de prueba CRUD",
             marca="Frija",
-            categoria="Experimental",
+            categoria="CRUDTest",
             presentacion="Botella",
             contenido_ml=355,
             alcohol=5.0,
             precio=40.00,
         )
+
         repositorio.guardar()
         print(f"CREATE: producto {producto.producto_id} creado.")
 
         # 2. READ: consultar el producto
-        encontrado = repositorio.obtener_producto(
+        producto_leido = repositorio.obtener_producto(
             producto.producto_id
         )
-        print(
-            "READ:",
-            encontrado.descripcion()
-            if encontrado else "Producto no encontrado"
-        )
+
+        if producto_leido is not None:
+            print("READ:", producto_leido.descripcion())
+        else:
+            print("READ: no se encontró el producto.")
 
         # 3. UPDATE: modificar el precio
-        actualizado = repositorio.actualizar_precio(
-            producto.producto_id, 45.00
+        precio_anterior = producto.precio
+        repositorio.actualizar_precio(
+            producto.producto_id,
+            45.00,
         )
-        repositorio.guardar()
 
         producto_actualizado = repositorio.obtener_producto(
             producto.producto_id
         )
+
         print(
-            "UPDATE:",
-            f"precio actualizado a ${producto_actualizado.precio:.2f}"
-            if actualizado else "No se pudo actualizar"
+            "UPDATE: precio actualizado de "
+            f"${precio_anterior:.2f} a "
+            f"${producto_actualizado.precio:.2f}"
         )
 
-        # 4. Crear inventario relacionado con el producto
+        repositorio.guardar()
+
+        # 4. Crear inventario y comprobar la relación con el producto
         inventario = repositorio.crear_inventario(
             sucursal="Tijuana",
             producto_id=producto.producto_id,
-            stock=20,
+            stock=10,
             stock_minimo=5,
         )
+
         repositorio.guardar()
 
         print(
-            "RELACIÓN:",
-            f"Inventario {inventario.inventario_id} referencia "
-            f"al producto {inventario.producto.producto_id}."
+            "RELACIÓN: el inventario "
+            f"{inventario.inventario_id} referencia al producto "
+            f"{inventario.producto.producto_id}."
         )
 
-        # 5. Consultar inventario bajo
-        inventarios_bajos = repositorio.inventario_bajo()
-        print(
-            "CONSULTA:",
-            f"Se encontraron {len(inventarios_bajos)} inventarios bajos."
-        )
-
-        # 6. DELETE: eliminar primero el inventario
-        eliminado_inventario = repositorio.eliminar_inventario(
+        # 5. DELETE: eliminar el inventario y después el producto
+        resultado_inventario = repositorio.eliminar_inventario(
             inventario.inventario_id
         )
         repositorio.guardar()
+
         print(
             "DELETE INVENTARIO:",
-            "correcto" if eliminado_inventario else "no encontrado"
+            "correcto" if resultado_inventario else "no encontrado",
         )
 
-        # Ahora se puede eliminar el producto
-        eliminado_producto = repositorio.eliminar_producto(
+        resultado_producto = repositorio.eliminar_producto(
             producto.producto_id
         )
         repositorio.guardar()
+
         print(
             "DELETE PRODUCTO:",
-            "correcto" if eliminado_producto else "no encontrado"
+            "correcto" if resultado_producto else "no encontrado",
         )
 
-        # 7. COMMIT: crear un producto que debe conservarse
-        confirmado = repositorio.crear_producto(
-            nombre="Producto confirmado",
+        # 6. COMMIT: guardar un producto de forma permanente
+        producto_commit = repositorio.crear_producto(
+            nombre="Cerveza Commit",
             marca="Frija",
-            categoria="Prueba",
+            categoria="TransaccionesTest",
             presentacion="Lata",
-            contenido_ml=473,
+            contenido_ml=355,
             alcohol=4.5,
             precio=35.00,
         )
+
+        id_commit = producto_commit.producto_id
         repositorio.guardar()
 
-        print(
-            "COMMIT:",
-            "producto guardado"
-            if repositorio.obtener_producto(confirmado.producto_id)
-            else "ERROR"
-        )
+        print(f"COMMIT: producto {id_commit} guardado.")
 
-        # 8. ABORT: crear un producto y revertir el cambio
-        temporal = repositorio.crear_producto(
-            nombre="Producto temporal abort",
-            marca="Prueba",
-            categoria="Prueba",
-            presentacion="Lata",
-            contenido_ml=473,
-            alcohol=4.0,
+        # 7. ABORT: comprobar que se revierten los cambios pendientes
+        producto_temporal = repositorio.crear_producto(
+            nombre="Cerveza Temporal",
+            marca="Frija",
+            categoria="TransaccionesTest",
+            presentacion="Botella",
+            contenido_ml=355,
+            alcohol=5.0,
             precio=30.00,
         )
-        id_temporal = temporal.producto_id
 
-      
+        id_temporal = producto_temporal.producto_id
+
         repositorio.deshacer_cambios()
 
-        print(
-            "ABORT:",
-            "cambio revertido"
-            if repositorio.obtener_producto(id_temporal) is None
-            else "REVISAR: el producto sigue presente"
+        producto_revertido = repositorio.obtener_producto(
+            id_temporal
         )
 
-        # 9. Prueba de herencia y polimorfismo
+        if producto_revertido is None:
+            print("ABORT: correcto, el producto temporal no se guardó.")
+        else:
+            print("ABORT: error, el producto temporal sigue existiendo.")
+
+        # 8. HERENCIA Y POLIMORFISMO
         print("\n=== HERENCIA Y POLIMORFISMO ===")
 
-        nacional = repositorio.crear_producto(
+        cerveza_nacional = repositorio.crear_producto(
             nombre="Cerveza Nacional Demo",
             marca="Frija",
-            categoria="Lager",
+            categoria="HerenciaTest",
             presentacion="Botella",
             contenido_ml=355,
             alcohol=5.0,
@@ -141,12 +144,12 @@ def main():
             importado=False,
         )
 
-        importada = repositorio.crear_producto(
+        cerveza_importada = repositorio.crear_producto(
             nombre="Cerveza Importada Demo",
             marca="Frija",
-            categoria="Ale",
+            categoria="HerenciaTest",
             presentacion="Lata",
-            contenido_ml=473,
+            contenido_ml=355,
             alcohol=6.0,
             precio=55.00,
             importado=True,
@@ -154,12 +157,10 @@ def main():
 
         repositorio.guardar()
 
-        # El mismo método se comporta diferente según la clase
-        for producto in (nacional, importada):
-            print(producto.descripcion())
+        print(cerveza_nacional.descripcion())
+        print(cerveza_importada.descripcion())
 
-            
-        # 10. Prueba de consultas y relaciones
+        # 9. CONSULTAS Y RELACIONES ENTRE OBJETOS
         print("\n=== CONSULTAS DE OBJETOS ===")
 
         producto_consulta = repositorio.crear_producto(
@@ -167,8 +168,8 @@ def main():
             marca="Frija",
             categoria="ConsultaTest",
             presentacion="Lata",
-            contenido_ml=473,
-            alcohol=5.0,
+            contenido_ml=355,
+            alcohol=4.5,
             precio=38.00,
         )
 
@@ -180,59 +181,70 @@ def main():
         )
 
         envio_consulta = repositorio.crear_envio(
-            cliente="Cliente Demo",
+            cliente="Cliente de prueba",
             sucursal="Tijuana",
             direccion="Tijuana, Baja California",
         )
 
         repositorio.agregar_producto_envio(
-            envio_consulta.envio_id,
-            producto_consulta.producto_id,
-            3,
+            envio_id=envio_consulta.envio_id,
+            producto_id=producto_consulta.producto_id,
+            cantidad=3,
         )
 
         repositorio.guardar()
 
-        # Consulta 1: productos por categoría
-        productos = repositorio.productos_por_categoria(
+        productos_categoria = repositorio.productos_por_categoria(
             "ConsultaTest"
         )
-        print("Productos por categoría:", len(productos))
+        inventarios_bajos = repositorio.inventario_bajo()
+        envios_pendientes = repositorio.envios_pendientes()
 
-        # Consulta 2: inventario por debajo del mínimo
-        bajos = repositorio.inventario_bajo()
-        print("Inventarios bajos:", len(bajos))
-
-        # Consulta 3: envíos pendientes
-        pendientes = repositorio.envios_pendientes()
-        print("Envíos pendientes:", len(pendientes))
-
-        # Comprobar la relación del envío con el producto
-        print("Descripción del envío:", envio_consulta.descripcion())
         print(
-            "Producto del detalle:",
-            envio_consulta.detalles[0]["producto"].descripcion(),
-
-            
+            "Productos por categoría:",
+            len(productos_categoria),
+        )
+        print(
+            "Inventarios bajos:",
+            len(inventarios_bajos),
+        )
+        print(
+            "Envíos pendientes:",
+            len(envios_pendientes),
         )
 
-        
-        # 11. Prueba de eliminación en cascada
+        print(
+            "Descripción del envío:",
+            envio_consulta.descripcion(),
+        )
+
+        if envio_consulta.detalles:
+            detalle = envio_consulta.detalles[0]
+            print(
+                "Producto del detalle:",
+                detalle["producto"].descripcion(),
+            )
+
+        # 10. ELIMINACIÓN EN CASCADA DE LOS DETALLES DEL ENVÍO
         print("\n=== ELIMINACIÓN EN CASCADA ===")
 
         id_envio_prueba = envio_consulta.envio_id
 
-        resultado = repositorio.eliminar_envio(id_envio_prueba)
+        resultado = repositorio.eliminar_envio(
+            id_envio_prueba
+        )
 
         print("ELIMINACIÓN EN CASCADA:", resultado)
-        print("DETALLES RESTANTES:", len(envio_consulta.detalles))
+        print(
+            "DETALLES RESTANTES:",
+            len(envio_consulta.detalles),
+        )
 
         repositorio.guardar()
 
     finally:
         repositorio.cerrar()
 
+
 if __name__ == "__main__":
     main()
-
-
