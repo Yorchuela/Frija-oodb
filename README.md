@@ -1,200 +1,68 @@
 ﻿# Yorch-Asociados
 
-## Sistema de gestión de una distribuidora de cerveza con base de datos orientada a objetos
+## Sistema de gestión de una distribuidora de cerveza
 
-## Descripción del proyecto
+### 1. Descripción del proyecto
 
-Este proyecto consiste en el desarrollo de un sistema para gestionar información de una distribuidora de cerveza llamada **Frija**, utilizando bases de datos orientadas a objetos.
+Yorch-Asociados es un proyecto desarrollado en Python que simula la gestión de una distribuidora de cerveza llamada Frija. Utiliza Durus para almacenar objetos y conservar la información del sistema.
 
-El proyecto permite administrar productos, inventarios y envíos mediante clases de Python y el sistema de persistencia de objetos Durus. También implementa relaciones entre objetos, herencia, polimorfismo y manejo de transacciones.
+El proyecto permite administrar productos, inventarios y envíos, aplicando conceptos de programación orientada a objetos y persistencia de datos.
 
-## Objetivo
+### 2. Objetivo
 
-Implementar y probar las operaciones principales de un sistema de gestión de una distribuidora de cerveza utilizando Python y una base de datos orientada a objetos.
+Implementar un sistema de gestión que permita realizar operaciones sobre productos, inventarios y envíos mediante una base de datos orientada a objetos, aplicando herencia, polimorfismo, relaciones entre objetos y transacciones.
 
-## Tecnologías utilizadas
+### 3. Tecnologías utilizadas
 
-- **Python:** lenguaje de programación.
-- **Durus:** almacenamiento y persistencia de objetos Python.
-- **PowerShell:** ejecución de comandos y administración del entorno de desarrollo.
-- **Git y GitHub:** control de versiones y respaldo del código fuente.
+- **Python:** desarrollo de la lógica del sistema.
+- **Durus:** almacenamiento y persistencia de objetos.
+- **Git y GitHub:** control de versiones y administración del repositorio.
 
-## Estructura del proyecto
+### 4. Estructura del proyecto
 
-```text
-Yorch-Asociados/
-├── durus-example/
-│   ├── data/
-│   ├── main.py
-│   ├── models.py
-│   ├── repository.py
-│   └── requirements.txt
-├── .gitignore
-└── README.md
-```
+- **`main.py`:** ejecuta las operaciones principales y las pruebas del sistema.
+- **`models.py`:** contiene las clases del proyecto, sus atributos, métodos y validaciones.
+- **`repository.py`:** administra las operaciones de persistencia, consultas y transacciones.
+- **`requirements.txt`:** especifica las dependencias del proyecto.
+- **`data/`:** almacena los archivos de datos generados localmente.
 
-**Descripción de los archivos principales:**
+### 5. Modelos implementados
 
-- `main.py`: ejecuta las operaciones del sistema y las pruebas.
-- `models.py`: contiene las clases y validaciones de los objetos.
-- `repository.py`: administra la persistencia, las consultas y las operaciones sobre los objetos.
-- `requirements.txt`: contiene las dependencias necesarias.
-- `data/`: almacena los archivos de datos generados localmente.
+**Producto:** representa una cerveza e incluye información como nombre, marca, categoría, presentación, contenido, porcentaje de alcohol y precio.
 
-## Modelos del sistema
+**CervezaNacional y CervezaImportada:** clases derivadas de `Producto` que permiten aplicar herencia y polimorfismo mediante descripciones especializadas.
 
-### Producto
+**Inventario:** administra las existencias de productos por sucursal y permite identificar niveles bajos de stock.
 
-Representa una cerveza y almacena información como nombre, marca, categoría, presentación, contenido en mililitros, porcentaje de alcohol y precio.
+**Envío:** representa los envíos a clientes e incluye su destino, estado y los productos asociados.
 
-Se utilizan las clases `CervezaNacional` y `CervezaImportada`, derivadas de `Producto`, para demostrar herencia y polimorfismo.
-
-### Inventario
-
-Permite registrar las existencias de un producto por sucursal y establecer un nivel mínimo de stock para identificar cuándo es necesario reabastecer.
-
-### Envío
-
-Representa un envío a un cliente e incluye la sucursal de origen, la dirección de destino, el estado del envío y los productos asociados.
-
-## Funcionalidades implementadas
+### 6. Funcionalidades
 
 - Crear, consultar, actualizar y eliminar productos.
-- Registrar y eliminar inventarios.
-- Relacionar productos con inventarios.
-- Registrar envíos y asociar productos con sus cantidades.
+- Registrar y administrar inventarios.
+- Relacionar productos con sus inventarios.
+- Registrar envíos y asociar productos con cantidades.
 - Consultar productos por categoría.
 - Identificar inventarios con existencias bajas.
 - Consultar envíos pendientes.
-- Utilizar herencia y polimorfismo en los tipos de cerveza.
-- Confirmar cambios mediante `COMMIT`.
-- Revertir cambios mediante `ABORT`.
+- Aplicar transacciones para confirmar o revertir cambios.
 - Validar los datos antes de almacenarlos.
-- Cerrar el repositorio de forma segura e impedir operaciones posteriores al cierre.
+- Cerrar el repositorio de forma segura.
 
-## Validaciones implementadas
+### 7. Pruebas realizadas
 
-El sistema comprueba que los datos sean válidos antes de crear o modificar objetos. Entre las validaciones probadas se encuentran:
+Se realizaron pruebas para comprobar el funcionamiento de las operaciones y el manejo de errores.
 
-- Rechazo de precios negativos.
-- Rechazo de porcentajes de alcohol fuera del rango permitido.
-- Rechazo de contenido infinito.
-- Rechazo de existencias negativas.
-- Rechazo de referencias a productos inexistentes.
-- Rechazo de categorías vacías.
+- **CRUD:** verificación de las operaciones de creación, consulta, actualización y eliminación.
+- **Relaciones entre objetos:** comprobación de las referencias entre productos, inventarios y envíos.
+- **Herencia y polimorfismo:** verificación de las descripciones de cervezas nacionales e importadas.
+- **Transacciones:** comprobación de `COMMIT` para confirmar cambios y `ABORT` para revertirlos.
+- **Validaciones:** seis pruebas para rechazar precios negativos, porcentajes de alcohol inválidos, contenido infinito, existencias negativas, productos inexistentes y categorías vacías.
+- **Cierre del repositorio:** comprobación de que no se permitan operaciones después del cierre y de que cerrarlo dos veces sea seguro.
 
-## Requisitos previos
+**Resultado:** en la última ejecución, las seis pruebas de validación fueron aprobadas y el programa finalizó correctamente.
 
-Para ejecutar el proyecto se necesita:
+### 8. Conclusión
 
-- Python instalado.
-- Git, si se desea clonar el repositorio.
-- Un entorno virtual de Python.
-- Las dependencias indicadas en `durus-example/requirements.txt`.
+El proyecto permitió aplicar conceptos de programación orientada a objetos y persistencia de datos mediante Python y Durus. Se implementaron operaciones de administración, relaciones entre objetos, herencia, polimorfismo, transacciones y validaciones, comprobando su funcionamiento mediante pruebas.
 
-## Instalación
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/Yorchuela/Frija-oodb.git
-cd Frija-oodb
-```
-
-### 2. Crear el entorno virtual
-
-```bash
-python -m venv venv
-```
-
-### 3. Activar el entorno virtual
-
-En Windows PowerShell:
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-Si PowerShell bloquea la ejecución del script, se puede habilitar temporalmente para la sesión actual:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
-```
-
-Después, activar nuevamente el entorno virtual.
-
-### 4. Instalar las dependencias
-
-Desde la raíz del proyecto:
-
-```powershell
-pip install -r durus-example/requirements.txt
-```
-
-## Ejecución del sistema
-
-Desde la raíz del repositorio, ejecutar:
-
-```powershell
-cd durus-example
-python main.py
-```
-
-El programa realiza operaciones de prueba sobre productos, inventarios y envíos, además de ejecutar las pruebas de validación y cierre del repositorio.
-
-## Ejecución de las pruebas
-
-Desde la carpeta `durus-example`, ejecutar primero:
-
-```powershell
-python -m py_compile models.py repository.py main.py
-```
-
-Este comando comprueba que los archivos no contengan errores de sintaxis.
-
-Después, ejecutar:
-
-```powershell
-python main.py
-```
-
-El programa muestra los resultados de las operaciones y de las pruebas implementadas.
-
-### Pruebas realizadas
-
-| Prueba | Resultado esperado |
-|---|---|
-| CRUD de productos | Operaciones ejecutadas correctamente |
-| Relaciones entre objetos | Referencias verificadas |
-| Herencia y polimorfismo | Descripciones especializadas verificadas |
-| Consultas | Productos, inventarios y envíos encontrados |
-| COMMIT | Cambios confirmados y conservados |
-| ABORT | Cambios temporales revertidos |
-| Validaciones | 6 de 6 pruebas aprobadas |
-| Cierre del repositorio | Operaciones posteriores al cierre rechazadas |
-
-**Resultado obtenido:** todas las pruebas finalizaron correctamente en la última ejecución realizada.
-
-## Persistencia de los datos
-
-Durus permite conservar los objetos en archivos de almacenamiento local. Los archivos de datos se generan durante la ejecución y se mantienen dentro de la carpeta `data/`.
-
-Los archivos de datos locales no forman parte del código fuente que debe compartirse en GitHub. Por ello, la carpeta se excluye mediante `.gitignore`.
-
-## Control de versiones
-
-El proyecto utiliza Git para registrar los cambios realizados durante el desarrollo y GitHub para alojar el repositorio remoto.
-
-Los cambios se pueden registrar y publicar con los siguientes comandos, ejecutados desde la raíz del repositorio:
-
-```bash
-git add .
-git commit -m "Descripción de los cambios"
-git push origin main
-```
-
-## Conclusión
-
-El proyecto permite aplicar conceptos de programación orientada a objetos y persistencia de datos en Python. Las pruebas realizadas verifican las operaciones principales, las relaciones entre objetos, las transacciones, las validaciones y el cierre seguro del repositorio.
-
-Este desarrollo constituye una base funcional para continuar ampliando el sistema de gestión de una distribuidora de cerveza.
