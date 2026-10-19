@@ -1,4 +1,6 @@
 
+import math
+
 from durus.persistent import Persistent
 from durus.persistent_list import PersistentList
 from durus.persistent_dict import PersistentDict
@@ -29,44 +31,48 @@ class Producto(Persistent):
 
         self.validar_datos()
 
+    @staticmethod
+    def _validar_texto(valor, campo):
+        """Comprueba que un texto no esté vacío."""
+        if not isinstance(valor, str) or not valor.strip():
+            raise ValueError(f"{campo} es obligatorio.")
+
+    @staticmethod
+    def _validar_numero(valor, campo, minimo=None, maximo=None):
+        """Valida números finitos y sus límites."""
+        if (
+            not isinstance(valor, (int, float))
+            or isinstance(valor, bool)
+            or not math.isfinite(valor)
+        ):
+            raise ValueError(f"{campo} debe ser un número finito.")
+
+        if minimo is not None and valor < minimo:
+            raise ValueError(f"{campo} debe ser mayor o igual a {minimo}.")
+
+        if maximo is not None and valor > maximo:
+            raise ValueError(f"{campo} debe ser menor o igual a {maximo}.")
+
     def validar_datos(self):
         """Valida los datos iniciales del producto."""
+        self._validar_texto(self._nombre, "El nombre")
+        self._validar_texto(self._marca, "La marca")
+        self._validar_texto(self._categoria, "La categoría")
+        self._validar_texto(self._presentacion, "La presentación")
 
-        if not isinstance(self._nombre, str) or not self._nombre.strip():
-            raise ValueError("El nombre es obligatorio.")
+        self._validar_numero(
+            self._contenido_ml, "El contenido", minimo=0
+        )
+        if self._contenido_ml == 0:
+            raise ValueError("El contenido debe ser mayor que cero.")
 
-        if not isinstance(self._marca, str) or not self._marca.strip():
-            raise ValueError("La marca es obligatoria.")
+        self._validar_numero(
+            self._alcohol, "El porcentaje de alcohol", minimo=0, maximo=100
+        )
 
-        if not isinstance(self._categoria, str) or not self._categoria.strip():
-            raise ValueError("La categoría es obligatoria.")
-
-        if (
-            not isinstance(self._presentacion, str)
-            or not self._presentacion.strip()
-        ):
-            raise ValueError("La presentación es obligatoria.")
-
-        if (
-            not isinstance(self._contenido_ml, (int, float))
-            or isinstance(self._contenido_ml, bool)
-            or self._contenido_ml <= 0
-        ):
-            raise ValueError("El contenido debe ser un número mayor que cero.")
-
-        if (
-            not isinstance(self._alcohol, (int, float))
-            or isinstance(self._alcohol, bool)
-            or not 0 <= self._alcohol <= 100
-        ):
-            raise ValueError("El alcohol debe estar entre 0 y 100.")
-
-        if (
-            not isinstance(self._precio, (int, float))
-            or isinstance(self._precio, bool)
-            or self._precio <= 0
-        ):
-            raise ValueError("El precio debe ser un número mayor que cero.")
+        self._validar_numero(self._precio, "El precio", minimo=0)
+        if self._precio == 0:
+            raise ValueError("El precio debe ser mayor que cero.")
 
     @property
     def nombre(self):
@@ -74,8 +80,7 @@ class Producto(Persistent):
 
     @nombre.setter
     def nombre(self, valor):
-        if not isinstance(valor, str) or not valor.strip():
-            raise ValueError("El nombre no puede estar vacío.")
+        self._validar_texto(valor, "El nombre")
         self._nombre = valor
 
     @property
@@ -84,8 +89,7 @@ class Producto(Persistent):
 
     @marca.setter
     def marca(self, valor):
-        if not isinstance(valor, str) or not valor.strip():
-            raise ValueError("La marca no puede estar vacía.")
+        self._validar_texto(valor, "La marca")
         self._marca = valor
 
     @property
@@ -94,8 +98,7 @@ class Producto(Persistent):
 
     @categoria.setter
     def categoria(self, valor):
-        if not isinstance(valor, str) or not valor.strip():
-            raise ValueError("La categoría no puede estar vacía.")
+        self._validar_texto(valor, "La categoría")
         self._categoria = valor
 
     @property
@@ -104,8 +107,7 @@ class Producto(Persistent):
 
     @presentacion.setter
     def presentacion(self, valor):
-        if not isinstance(valor, str) or not valor.strip():
-            raise ValueError("La presentación no puede estar vacía.")
+        self._validar_texto(valor, "La presentación")
         self._presentacion = valor
 
     @property
@@ -114,12 +116,9 @@ class Producto(Persistent):
 
     @contenido_ml.setter
     def contenido_ml(self, valor):
-        if (
-            not isinstance(valor, (int, float))
-            or isinstance(valor, bool)
-            or valor <= 0
-        ):
-            raise ValueError("El contenido debe ser un número mayor que cero.")
+        self._validar_numero(valor, "El contenido", minimo=0)
+        if valor == 0:
+            raise ValueError("El contenido debe ser mayor que cero.")
         self._contenido_ml = valor
 
     @property
@@ -128,12 +127,9 @@ class Producto(Persistent):
 
     @alcohol.setter
     def alcohol(self, valor):
-        if (
-            not isinstance(valor, (int, float))
-            or isinstance(valor, bool)
-            or not 0 <= valor <= 100
-        ):
-            raise ValueError("El alcohol debe estar entre 0 y 100.")
+        self._validar_numero(
+            valor, "El porcentaje de alcohol", minimo=0, maximo=100
+        )
         self._alcohol = valor
 
     @property
@@ -142,12 +138,9 @@ class Producto(Persistent):
 
     @precio.setter
     def precio(self, valor):
-        if (
-            not isinstance(valor, (int, float))
-            or isinstance(valor, bool)
-            or valor <= 0
-        ):
-            raise ValueError("El precio debe ser un número mayor que cero.")
+        self._validar_numero(valor, "El precio", minimo=0)
+        if valor == 0:
+            raise ValueError("El precio debe ser mayor que cero.")
         self._precio = valor
 
     def descripcion(self):
@@ -182,17 +175,14 @@ class Inventario(Persistent):
         stock,
         stock_minimo,
     ):
-        if (
-            not isinstance(stock, int)
-            or isinstance(stock, bool)
-            or not isinstance(stock_minimo, int)
-            or isinstance(stock_minimo, bool)
-            or stock < 0
-            or stock_minimo < 0
-        ):
-            raise ValueError(
-                "El stock y el stock mínimo deben ser enteros no negativos."
-            )
+        self._validar_entero_no_negativo(stock, "El stock")
+        self._validar_entero_no_negativo(stock_minimo, "El stock mínimo")
+
+        if not isinstance(sucursal, str) or not sucursal.strip():
+            raise ValueError("La sucursal es obligatoria.")
+
+        if not isinstance(producto, Producto):
+            raise ValueError("El producto debe ser un objeto Producto válido.")
 
         self.inventario_id = inventario_id
         self.sucursal = sucursal
@@ -200,9 +190,24 @@ class Inventario(Persistent):
         self._stock = stock
         self._stock_minimo = stock_minimo
 
+    @staticmethod
+    def _validar_entero_no_negativo(valor, campo):
+        if (
+            not isinstance(valor, int)
+            or isinstance(valor, bool)
+            or valor < 0
+        ):
+            raise ValueError(
+                f"{campo} debe ser un entero no negativo."
+            )
+
     @property
     def stock(self):
         return self._stock
+
+    @property
+    def stock_minimo(self):
+        return self._stock_minimo
 
     def agregar_stock(self, cantidad):
         if (
@@ -210,7 +215,9 @@ class Inventario(Persistent):
             or isinstance(cantidad, bool)
             or cantidad <= 0
         ):
-            raise ValueError("La cantidad debe ser un entero mayor que cero.")
+            raise ValueError(
+                "La cantidad debe ser un entero mayor que cero."
+            )
 
         self._stock += cantidad
 
@@ -220,7 +227,9 @@ class Inventario(Persistent):
             or isinstance(cantidad, bool)
             or cantidad <= 0
         ):
-            raise ValueError("La cantidad debe ser un entero mayor que cero.")
+            raise ValueError(
+                "La cantidad debe ser un entero mayor que cero."
+            )
 
         if cantidad > self._stock:
             raise ValueError("No hay suficiente inventario.")
@@ -250,8 +259,16 @@ class Envio(Persistent):
         direccion,
         estado="PENDING",
     ):
-        if estado not in self.ESTADOS_VALIDOS:
-            raise ValueError("Estado de envío no válido.")
+        if not isinstance(cliente, str) or not cliente.strip():
+            raise ValueError("El cliente es obligatorio.")
+
+        if not isinstance(sucursal, str) or not sucursal.strip():
+            raise ValueError("La sucursal es obligatoria.")
+
+        if not isinstance(direccion, str) or not direccion.strip():
+            raise ValueError("La dirección es obligatoria.")
+
+        self._validar_estado(estado)
 
         self.envio_id = envio_id
         self.cliente = cliente
@@ -260,13 +277,23 @@ class Envio(Persistent):
         self.estado = estado
         self.detalles = PersistentList()
 
+    @classmethod
+    def _validar_estado(cls, estado):
+        if not isinstance(estado, str) or estado not in cls.ESTADOS_VALIDOS:
+            raise ValueError("Estado de envío no válido.")
+
     def agregar_producto(self, producto, cantidad):
+        if not isinstance(producto, Producto):
+            raise ValueError("El producto debe ser un objeto Producto válido.")
+
         if (
             not isinstance(cantidad, int)
             or isinstance(cantidad, bool)
             or cantidad <= 0
         ):
-            raise ValueError("La cantidad debe ser un entero mayor que cero.")
+            raise ValueError(
+                "La cantidad debe ser un entero mayor que cero."
+            )
 
         detalle = PersistentDict({
             "producto": producto,
@@ -276,9 +303,7 @@ class Envio(Persistent):
         self.detalles.append(detalle)
 
     def cambiar_estado(self, nuevo_estado):
-        if nuevo_estado not in self.ESTADOS_VALIDOS:
-            raise ValueError("Estado de envío no válido.")
-
+        self._validar_estado(nuevo_estado)
         self.estado = nuevo_estado
 
     def descripcion(self):
