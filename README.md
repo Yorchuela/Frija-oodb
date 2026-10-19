@@ -1,75 +1,86 @@
-# Sistema de Base de Datos Orientada a Objetos para una Cervecería
+﻿# Sistema de Base de Datos Orientada a Objetos para una Cervecería
 
-## Descripción
+## 1. Descripción
 
 Este proyecto implementa un ejemplo de base de datos orientada a objetos utilizando Python y Durus. Está basado en el sistema de una empresa dedicada a la distribución y exportación de cerveza.
 
 El objetivo es representar productos, inventarios y envíos mediante objetos persistentes, permitiendo almacenar información, establecer referencias entre objetos y realizar operaciones de consulta y modificación.
 
-## Tecnologías utilizadas
+## 2. Tecnologías utilizadas
 
 - Python 3
 - Durus 4.3
-- pywin32 (para la ejecución de Durus en Windows)
+- pywin32
 - Git y GitHub
 
-## Estructura del proyecto
+## 3. Estructura del proyecto
 
 ```text
 Yorch-Asociados/
 ├── .gitignore
 ├── README.md
-├── durus-example/
-│   ├── main.py
-│   ├── models.py
-│   ├── repository.py
-│   └── requirements.txt
-└── venv/
+├── diagrama_clases.md
+└── durus-example/
+    ├── main.py
+    ├── models.py
+    ├── repository.py
+    └── requirements.txt
 ```
 
-La carpeta `venv` es el entorno virtual local y no debe subirse al repositorio.
+La carpeta `venv` corresponde al entorno virtual local y no debe subirse al repositorio. La carpeta `data` almacena los archivos de persistencia generados durante la ejecución.
 
-## Modelos implementados
+## 4. Modelos implementados
 
 - **Producto:** representa una cerveza e incluye atributos, validaciones y métodos para consultar su descripción.
-- **CervezaNacional:** especialización de Producto mediante herencia.
-- **CervezaImportada:** especialización de Producto mediante herencia y polimorfismo.
-- **Inventario:** mantiene una referencia al producto y administra las existencias.
-- **Envio:** representa un envío y contiene una lista persistente de productos y cantidades.
+- **CervezaNacional:** especialización de `Producto` mediante herencia.
+- **CervezaImportada:** especialización de `Producto` mediante herencia y polimorfismo.
+- **Inventario:** mantiene una referencia al producto y administra las existencias de una sucursal.
+- **Envio:** representa un envío y contiene una colección persistente de productos y cantidades.
 
-## Instalación
+## 5. Instalación
 
 Se requiere tener Python instalado.
 
 Desde la terminal, ubicada en la carpeta raíz del proyecto, ejecutar:
 
-```bash
+```powershell
 python -m venv venv
-venv\Scripts\activate
-python -m pip install -r durus-example/requirements.txt
+.\venv\Scripts\Activate.ps1
+python -m pip install -r .\durus-example\requirements.txt
 ```
 
-## Ejecución
+Si PowerShell bloquea la activación del entorno virtual, ejecutar lo siguiente en esa misma terminal:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\venv\Scripts\Activate.ps1
+```
+
+## 6. Ejecución
 
 Desde la raíz del proyecto, ejecutar:
 
-```bash
-cd durus-example
+```powershell
+cd .\durus-example
 python main.py
 ```
 
-El programa ejecuta una prueba de transacciones para comprobar que `commit()` conserva los cambios confirmados y que `abort()` deshace los cambios pendientes.
+El programa ejecuta pruebas de operaciones CRUD, relaciones entre objetos, herencia, polimorfismo, consultas y transacciones.
 
-## Persistencia
+## 7. Persistencia y transacciones
 
 Durus almacena los objetos en un archivo propio. El repositorio administra las colecciones persistentes de productos, inventarios y envíos mediante `connection.get_root()`.
 
-El método `commit()` confirma los cambios y `abort()` permite deshacer los cambios de la transacción actual.
+El método `commit()` confirma los cambios realizados, mientras que `abort()` revierte los cambios pendientes de la transacción actual.
 
-## Relación con el modelo relacional
+## 8. Relación con el modelo relacional
 
-El ejemplo toma como referencia el sistema de distribución de cerveza que utiliza una base de datos relacional. Las clases de Python representan conceptos del negocio y utilizan referencias entre objetos en lugar de depender exclusivamente de claves foráneas y operaciones JOIN.
+El proyecto toma como referencia el sistema de distribución de cerveza que utiliza una base de datos relacional. Las clases de Python representan conceptos del negocio y utilizan referencias entre objetos en lugar de depender exclusivamente de claves foráneas y operaciones `JOIN`.
 
-## Autoría y propósito académico
+## 9. Diagrama de clases
 
-Proyecto académico para la asignatura Tópicos de Bases de Datos. Su propósito es estudiar las bases de datos orientadas a objetos, la persistencia, la herencia, el polimorfismo y las relaciones entre objetos.
+El archivo `diagrama_clases.md` contiene el diagrama UML del modelo orientado a objetos, incluyendo las clases principales, sus relaciones y la herencia.
+
+## 10. Autoría y propósito académico
+
+Proyecto académico para la asignatura Tópicos de Bases de Datos. Su propósito es estudiar las bases de datos orientadas a objetos, la persistencia, la herencia, el polimorfismo, las transacciones y las relaciones entre objetos.

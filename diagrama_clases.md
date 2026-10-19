@@ -1,18 +1,33 @@
-
+```mermaid
 classDiagram
     class Persistent {
         <<Durus>>
     }
 
+    class PersistentList {
+        <<Durus>>
+    }
+
+    class PersistentDict {
+        <<Durus>>
+    }
+
     class Producto {
         +int producto_id
-        -str nombre
-        -str marca
-        -str categoria
-        -str presentacion
-        -float contenido_ml
-        -float alcohol
-        -float precio
+        -str _nombre
+        -str _marca
+        -str _categoria
+        -str _presentacion
+        -float _contenido_ml
+        -float _alcohol
+        -float _precio
+        +nombre
+        +marca
+        +categoria
+        +presentacion
+        +contenido_ml
+        +alcohol
+        +precio
         +validar_datos()
         +descripcion()
     }
@@ -28,8 +43,10 @@ classDiagram
     class Inventario {
         +int inventario_id
         +str sucursal
-        -int stock
-        -int stock_minimo
+        +Producto producto
+        -int _stock
+        -int _stock_minimo
+        +stock
         +agregar_stock(cantidad)
         +retirar_stock(cantidad)
         +necesita_reabastecimiento()
@@ -50,13 +67,12 @@ classDiagram
     Persistent <|-- Producto
     Persistent <|-- Inventario
     Persistent <|-- Envio
+
     Producto <|-- CervezaNacional
     Producto <|-- CervezaImportada
-    Inventario --> Producto : referencia
-    Envio --> Producto : incluye productos
-    Envio *-- "0..*" DetalleEnvio : contiene
 
-    class DetalleEnvio {
-        +Producto producto
-        +int cantidad
-    }
+    Inventario --> Producto : referencia
+    Envio *-- PersistentList : detalles
+    PersistentList *-- PersistentDict : elementos
+    PersistentDict --> Producto : producto
+    ```
