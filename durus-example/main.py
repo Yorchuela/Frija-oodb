@@ -1,134 +1,170 @@
 
+import math
 import os
 import tempfile
 
 from repository import RepositorioCerveceria
+from models import Producto
 
 
-def probar_validaciones(repositorio):
-    """Comprueba que el sistema rechace datos inválidos."""
+RUTA_PRUEBAS = os.path.join("data", "cerveceria_pruebas.durus")
 
+
+def comprobar(condicion, mensaje):
+    """Detiene las pruebas si una condición no se cumple."""
+    if not condicion:
+        raise AssertionError(mensaje)
+
+    print(f"OK: {mensaje}")
+
+
+def probar_validaciones():
     print("\n=== PRUEBAS DE VALIDACIÓN ===")
 
-    pruebas_correctas = 0
-    total_pruebas = 6
+    total = 0
 
-    # 1. Rechazar un precio negativo.
+    def probar(nombre, accion):
+        nonlocal total
+
+        try:
+            accion()
+        except (ValueError, TypeError):
+            print(f"OK: {nombre}")
+            total += 1
+        else:
+            raise AssertionError(
+                f"La validación no rechazó el caso: {nombre}"
+            )
+
+    probar(
+        "se rechazó el precio negativo",
+        lambda: Producto(
+            None, "Cerveza", "Frija", "Prueba",
+            "Botella", 355, 5.0, -10
+        ),
+    )
+
+    probar(
+        "se rechazó el porcentaje de alcohol inválido",
+        lambda: Producto(
+            None, "Cerveza", "Frija", "Prueba",
+            "Botella", 355, 101, 40
+        ),
+    )
+
+    probar(
+        "se rechazó el contenido infinito",
+        lambda: Producto(
+            None, "Cerveza", "Frija", "Prueba",
+            "Botella", math.inf, 5.0, 40
+        ),
+    )
+
+    repositorio = RepositorioCerveceria(
+        os.path.join("data", "validaciones_temporal.durus")
+    )
+
     try:
-        repositorio.crear_producto(
-            nombre="Producto inválido",
-            marca="Frija",
-            categoria="Pruebas",
-            presentacion="Botella",
-            contenido_ml=355,
-            alcohol=5.0,
-            precio=-10,
+        probar(
+            "se rechazó el stock negativo",
+            lambda: repositorio.crear_inventario(
+                "Tijuana", 999999, -1, 5
+            ),
         )
-        print("ERROR: se aceptó un precio negativo.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó el precio negativo.")
 
-    # 2. Rechazar un porcentaje de alcohol superior a 100.
-    try:
-        repositorio.crear_producto(
-            nombre="Producto inválido",
-            marca="Frija",
-            categoria="Pruebas",
-            presentacion="Botella",
-            contenido_ml=355,
-            alcohol=120,
-            precio=30,
+        probar(
+            "se rechazó el producto inexistente",
+            lambda: repositorio.crear_inventario(
+                "Tijuana", 999999, 10, 5
+            ),
         )
-        print("ERROR: se aceptó un porcentaje de alcohol inválido.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó el porcentaje de alcohol inválido.")
 
-    # 3. Rechazar un contenido infinito.
-    try:
-        repositorio.crear_producto(
-            nombre="Producto inválido",
-            marca="Frija",
-            categoria="Pruebas",
-            presentacion="Botella",
-            contenido_ml=float("inf"),
-            alcohol=5.0,
-            precio=30,
+        probar(
+            "se rechazó la categoría vacía",
+            lambda: repositorio.productos_por_categoria("   "),
         )
-        print("ERROR: se aceptó un contenido infinito.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó el contenido infinito.")
 
-    # 4. Rechazar un stock negativo.
-    try:
-        repositorio.crear_inventario(
-            sucursal="Tijuana",
-            producto_id=-999,
-            stock=-5,
-            stock_minimo=2,
-        )
-        print("ERROR: se aceptó un stock negativo.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó el stock negativo.")
-
-    # 5. Rechazar un producto inexistente.
-    try:
-        repositorio.crear_inventario(
-            sucursal="Tijuana",
-            producto_id=-999,
-            stock=5,
-            stock_minimo=2,
-        )
-        print("ERROR: se aceptó un producto inexistente.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó el producto inexistente.")
-
-    # 6. Rechazar una categoría vacía.
-    try:
-        repositorio.productos_por_categoria("   ")
-        print("ERROR: se aceptó una categoría vacía.")
-    except ValueError:
-        pruebas_correctas += 1
-        print("OK: se rechazó la categoría vacía.")
+    finally:
+        repositorio.cerrar()
 
     print(
-        f"\nResultado: {pruebas_correctas}/{total_pruebas} "
-        "pruebas de validación correctas."
+        f"\nResultado: {total}/6 pruebas de validación correctas."
     )
 
-    if pruebas_correctas != total_pruebas:
-        raise AssertionError(
-            "Una o más pruebas de validación fallaron."
-        )
+    comprobar(
+        total == 6,
+        "todas las validaciones rechazaron los datos incorrectos",
+    )
 
 
-def main():
+def probar_cierre_repositorio():
+    print("\n=== PRUEBA DE CIERRE DEL REPOSITORIO ===")
+
     os.makedirs("data", exist_ok=True)
 
-    # Crear un archivo temporal exclusivo para las pruebas.
-    archivo_temporal = tempfile.NamedTemporaryFile(
-        prefix="cerveceria_pruebas_",
+    descriptor, ruta_temporal = tempfile.mkstemp(
+        prefix="prueba_cierre_",
         suffix=".durus",
         dir="data",
-        delete=False,
     )
-
-    ruta_temporal = archivo_temporal.name
-    archivo_temporal.close()
+    os.close(descriptor)
     os.remove(ruta_temporal)
 
     repositorio = None
 
     try:
-        repositorio = RepositorioCerveceria(ruta=ruta_temporal)
+        repositorio = RepositorioCerveceria(ruta_temporal)
 
-        # 1. CRUD Y TRANSACCIONES.
-        print("=== PRUEBA CRUD Y TRANSACCIONES ===")
+        # El repositorio debe funcionar antes del cierre.
+        repositorio.listar_productos()
 
+        comprobar(
+            not repositorio.cerrado,
+            "el repositorio está abierto inicialmente",
+        )
+
+        # Cerrar y comprobar el estado.
+        repositorio.cerrar()
+
+        comprobar(
+            repositorio.cerrado,
+            "el repositorio se cerró correctamente",
+        )
+
+        # Las operaciones deben rechazarse después del cierre.
+        try:
+            repositorio.listar_productos()
+        except RuntimeError:
+            print(
+                "OK: se rechazó una operación después del cierre."
+            )
+        else:
+            raise AssertionError(
+                "Se permitió listar productos después del cierre."
+            )
+
+        # Cerrar por segunda vez no debe producir errores.
+        repositorio.cerrar()
+
+        print(
+            "OK: cerrar el repositorio dos veces es seguro."
+        )
+
+    finally:
+        if repositorio is not None:
+            repositorio.cerrar()
+
+        if os.path.exists(ruta_temporal):
+            os.remove(ruta_temporal)
+
+
+def main():
+    print("=== PRUEBA CRUD Y TRANSACCIONES ===")
+
+    repositorio = RepositorioCerveceria(RUTA_PRUEBAS)
+
+    try:
+        # 1. CREATE
         producto = repositorio.crear_producto(
             nombre="Cerveza de prueba CRUD",
             marca="Frija",
@@ -140,42 +176,43 @@ def main():
         )
 
         repositorio.guardar()
+
         print(f"CREATE: producto {producto.producto_id} creado.")
 
-        # READ.
+        # 2. READ
         producto_leido = repositorio.obtener_producto(
             producto.producto_id
         )
 
-        if producto_leido is not None:
-            print("READ:", producto_leido.descripcion())
-        else:
-            raise AssertionError("No se encontró el producto creado.")
+        comprobar(
+            producto_leido is not None,
+            "el producto creado se puede consultar",
+        )
 
-        # UPDATE.
-        precio_anterior = producto_leido.precio
+        print("READ:", producto_leido.descripcion())
 
-        resultado_precio = repositorio.actualizar_precio(
-            producto.producto_id,
-            45.00,
+        # 3. UPDATE
+        precio_anterior = producto.precio
+
+        comprobar(
+            repositorio.actualizar_precio(
+                producto.producto_id, 45.00
+            ),
+            "se actualizó el precio del producto",
         )
 
         producto_actualizado = repositorio.obtener_producto(
             producto.producto_id
         )
 
-        if not resultado_precio:
-            raise AssertionError("No se pudo actualizar el precio.")
-
         print(
-            "UPDATE: precio actualizado de "
-            f"${precio_anterior:.2f} a "
-            f"${producto_actualizado.precio:.2f}"
+            f"UPDATE: precio de ${precio_anterior:.2f} "
+            f"a ${producto_actualizado.precio:.2f}"
         )
 
         repositorio.guardar()
 
-        # Crear inventario y comprobar la relación.
+        # 4. INVENTARIO Y RELACIÓN CON EL PRODUCTO
         inventario = repositorio.crear_inventario(
             sucursal="Tijuana",
             producto_id=producto.producto_id,
@@ -185,36 +222,34 @@ def main():
 
         repositorio.guardar()
 
-        print(
-            "RELACIÓN: el inventario "
-            f"{inventario.inventario_id} referencia al producto "
-            f"{inventario.producto.producto_id}."
+        comprobar(
+            inventario.producto.producto_id == producto.producto_id,
+            "el inventario referencia al producto correcto",
         )
 
-        # DELETE: eliminar inventario y producto.
-        resultado_inventario = repositorio.eliminar_inventario(
-            inventario.inventario_id
+        print(
+            f"RELACIÓN: inventario {inventario.inventario_id} "
+            f"referencia al producto {inventario.producto.producto_id}."
+        )
+
+        # 5. DELETE INVENTARIO Y PRODUCTO
+        comprobar(
+            repositorio.eliminar_inventario(
+                inventario.inventario_id
+            ),
+            "se eliminó el inventario",
         )
 
         repositorio.guardar()
 
-        print(
-            "DELETE INVENTARIO:",
-            "correcto" if resultado_inventario else "no encontrado",
-        )
-
-        resultado_producto = repositorio.eliminar_producto(
-            producto.producto_id
+        comprobar(
+            repositorio.eliminar_producto(producto.producto_id),
+            "se eliminó el producto",
         )
 
         repositorio.guardar()
 
-        print(
-            "DELETE PRODUCTO:",
-            "correcto" if resultado_producto else "no encontrado",
-        )
-
-        # COMMIT.
+        # 6. COMMIT
         producto_commit = repositorio.crear_producto(
             nombre="Cerveza Commit",
             marca="Frija",
@@ -228,9 +263,12 @@ def main():
         id_commit = producto_commit.producto_id
         repositorio.guardar()
 
-        print(f"COMMIT: producto {id_commit} guardado.")
+        comprobar(
+            repositorio.obtener_producto(id_commit) is not None,
+            "COMMIT conservó el producto confirmado",
+        )
 
-        # ABORT.
+        # 7. ABORT
         producto_temporal = repositorio.crear_producto(
             nombre="Cerveza Temporal",
             marca="Frija",
@@ -245,18 +283,11 @@ def main():
 
         repositorio.deshacer_cambios()
 
-        producto_revertido = repositorio.obtener_producto(
-            id_temporal
+        comprobar(
+            repositorio.obtener_producto(id_temporal) is None,
+            "ABORT revirtió el producto temporal",
         )
 
-        if producto_revertido is None:
-            print("ABORT: correcto, el producto temporal no se guardó.")
-        else:
-            raise AssertionError(
-                "ABORT falló: el producto temporal sigue existiendo."
-            )
-
-        # 2. HERENCIA Y POLIMORFISMO.
         print("\n=== HERENCIA Y POLIMORFISMO ===")
 
         cerveza_nacional = repositorio.crear_producto(
@@ -286,7 +317,16 @@ def main():
         print(cerveza_nacional.descripcion())
         print(cerveza_importada.descripcion())
 
-        # 3. CONSULTAS Y RELACIONES ENTRE OBJETOS.
+        comprobar(
+            "[NACIONAL]" in cerveza_nacional.descripcion(),
+            "la cerveza nacional usa su descripción especializada",
+        )
+
+        comprobar(
+            "[IMPORTADA]" in cerveza_importada.descripcion(),
+            "la cerveza importada usa su descripción especializada",
+        )
+
         print("\n=== CONSULTAS DE OBJETOS ===")
 
         producto_consulta = repositorio.crear_producto(
@@ -329,44 +369,53 @@ def main():
         print("Productos por categoría:", len(productos_categoria))
         print("Inventarios bajos:", len(inventarios_bajos))
         print("Envíos pendientes:", len(envios_pendientes))
-
         print("Descripción del envío:", envio_consulta.descripcion())
 
-        if envio_consulta.detalles:
-            detalle = envio_consulta.detalles[0]
-            print(
-                "Producto del detalle:",
-                detalle["producto"].descripcion(),
-            )
+        comprobar(
+            any(
+                p.producto_id == producto_consulta.producto_id
+                for p in productos_categoria
+            ),
+            "la consulta encuentra el producto por categoría",
+        )
 
-        # 4. ELIMINACIÓN DE UN ENVÍO Y SUS DETALLES.
-        print("\n=== ELIMINACIÓN EN CASCADA ===")
+        comprobar(
+            any(
+                i.inventario_id == inventario_consulta.inventario_id
+                for i in inventarios_bajos
+            ),
+            "la consulta encuentra el inventario bajo",
+        )
 
-        id_envio_prueba = envio_consulta.envio_id
+        comprobar(
+            any(
+                e.envio_id == envio_consulta.envio_id
+                for e in envios_pendientes
+            ),
+            "la consulta encuentra el envío pendiente",
+        )
 
-        resultado = repositorio.eliminar_envio(id_envio_prueba)
+        print("\n=== ELIMINACIÓN DE ENVÍO Y DETALLES ===")
 
-        print("ELIMINACIÓN EN CASCADA:", resultado)
-        print("DETALLES RESTANTES:", len(envio_consulta.detalles))
+        comprobar(
+            repositorio.eliminar_envio(envio_consulta.envio_id),
+            "se eliminó el envío",
+        )
 
-        if not resultado or len(envio_consulta.detalles) != 0:
-            raise AssertionError("Falló la eliminación del envío o sus detalles.")
+        comprobar(
+            len(envio_consulta.detalles) == 0,
+            "el envío eliminado ya no conserva detalles",
+        )
 
         repositorio.guardar()
 
-        # 5. VALIDACIONES.
-        probar_validaciones(repositorio)
-
-        print("\nTodas las pruebas finalizaron correctamente.")
-
     finally:
-        try:
-            if repositorio is not None:
-                repositorio.cerrar()
-        finally:
-            # Eliminar solamente el archivo temporal de esta ejecución.
-            if os.path.exists(ruta_temporal):
-                os.remove(ruta_temporal)
+        repositorio.cerrar()
+
+    probar_validaciones()
+    probar_cierre_repositorio()
+
+    print("\nTodas las pruebas finalizaron correctamente.")
 
 
 if __name__ == "__main__":
